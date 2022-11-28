@@ -1,8 +1,9 @@
-const { request, response } = require("express");
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const cors = require("cors");
+const Person = require("./models/person");
 
 morgan.token("postInfo", (request) => {
   return request.method === "POST" ? JSON.stringify(request.body) : null;
@@ -17,47 +18,15 @@ app.use(
   )
 );
 
-let data = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-  {
-    id: 5,
-    name: "Chal hat",
-    number: "100178",
-  },
-];
-
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min);
-}
-
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
 app.get("/api/persons", (request, response) => {
-  response.json(data);
+  Person.find({}).then((people) => {
+    response.json(people);
+  });
 });
 
 app.get("/api/persons/info", (request, response) => {
@@ -69,13 +38,9 @@ app.get("/api/persons/info", (request, response) => {
 });
 
 app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = data.find((person) => person.id === id);
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+  Person.findById(request.params.id).then((note) => {
+    response.json(note);
+  });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
@@ -85,24 +50,18 @@ app.delete("/api/persons/:id", (request, response) => {
 });
 
 app.post("/api/persons/", (request, response) => {
-  const id = getRandomInt(10, 10000);
   const body = request.body;
 
-  if (body.name && body.number) {
-    if (data.find((person) => person.name === body.name)) {
-      response.status(404).send({ error: "Name must be unique" });
-    } else {
-      const person = {
-        name: body.name,
-        number: body.number,
-        id: id,
-      };
-      data = data.concat(person);
-      response.json(person);
-    }
-  } else {
-    response
-      .status(404)
-      .send({ error: "Values must be added to both name and number" });
+  if (body.name === undefined) {
+    return response.status(400).json({ error: "Content missing" });
   }
+
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  });
+
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
