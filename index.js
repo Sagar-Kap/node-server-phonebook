@@ -36,7 +36,7 @@ app.get("/api/persons/info", (request, response) => {
   );
 });
 
-app.get("/api/person/:id", (request, response) => {
+app.get("/api/persons/:id", (request, response) => {
   Person.findById(request.params.id)
     .then((person) => {
       if (person) {
@@ -51,7 +51,7 @@ app.get("/api/person/:id", (request, response) => {
     });
 });
 
-app.delete("/api/person/:id", (request, response, next) => {
+app.delete("/api/persons/:id", (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then((result) => {
       response.status(204).end();
@@ -76,7 +76,7 @@ app.post("/api/persons/", (request, response) => {
   });
 });
 
-app.put("/api/person/:id", (request, response, next) => {
+app.put("/api/persons/:id", (request, response, next) => {
   const { name, number } = request.body;
 
   Person.findByIdAndUpdate(request.params.id, { name, number })
